@@ -156,8 +156,32 @@ echo Done.
 exit /b 0
 
 :DoRegister
-echo Installing hqlauncher from: %SCRIPT_DIR%
+echo Registering hqlauncher to user PATH...
 echo.
+
+:: Project directory (where make.bat resides)
+set "PROJECT_DIR=%~dp0"
+set "PROJECT_DIR=%PROJECT_DIR:~0,-1%"
+
+:: Proxy directory (same as config.json)
+set "PROXY_DIR=%APPDATA%\hqlauncher"
+if not exist "%PROXY_DIR%" mkdir "%PROXY_DIR%"
+
+:: Create proxy hqlauncher.bat
+:: Priority: hqlauncher.exe (exe) > hqlauncher.bat (python dev)
+(
+    echo @echo off
+    echo if exist "%PROJECT_DIR%\hqlauncher.exe" ^(
+    echo     "%PROJECT_DIR%\hqlauncher.exe" %%*
+    echo ^) else if exist "%PROJECT_DIR%\hqlauncher.bat" ^(
+    echo     call "%PROJECT_DIR%\hqlauncher.bat" %%*
+    echo ^) else ^(
+    echo     echo [Error] hqlauncher not found in %PROJECT_DIR%
+    echo     exit /b 1
+    echo ^)
+) > "%PROXY_DIR%\hqlauncher.bat"
+
+echo [OK] Created proxy: %PROXY_DIR%\hqlauncher.bat
 
 :: Read current user PATH
 set "USER_PATH="
@@ -165,19 +189,19 @@ for /f "tokens=1,2*" %%a in ('reg query HKCU\Environment /v Path 2^>nul') do (
     if /i "%%a"=="Path" set "USER_PATH=%%c"
 )
 
-:: Check if already in PATH
+:: Check if proxy dir is already in PATH
 if defined USER_PATH (
-    echo ;%USER_PATH%; | find /i ";%SCRIPT_DIR%;" >nul && (
+    echo ;%USER_PATH%; | find /i ";%PROXY_DIR%;" >nul && (
         echo [OK] Already in user PATH.
         exit /b 0
     )
 )
 
-:: Add to user PATH
+:: Add proxy dir to PATH
 if defined USER_PATH (
-    setx Path "%USER_PATH%;%SCRIPT_DIR%" >nul 2>&1
+    setx Path "%USER_PATH%;%PROXY_DIR%" >nul 2>&1
 ) else (
-    setx Path "%SCRIPT_DIR%" >nul 2>&1
+    setx Path "%PROXY_DIR%" >nul 2>&1
 )
 
 if !errorlevel! equ 0 (
@@ -185,9 +209,9 @@ if !errorlevel! equ 0 (
 ) else (
     echo [WARN] Failed to update PATH automatically.
     echo        Please add the following path to your PATH manually:
-    echo        %SCRIPT_DIR%
+    echo        %PROXY_DIR%
 )
 
 echo.
-echo Installation complete. Please restart your terminal to use 'hqlauncher'.
+echo Please restart your terminal to use 'hqlauncher'.
 exit /b 0
