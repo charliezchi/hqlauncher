@@ -121,6 +121,10 @@ if exist "*.log" (
     echo [OK] Removed log files
 )
 
+if exist "cut_merge.do" (
+    del /f "cut_merge.do"
+)
+
 if exist "*.dump" (
     del /f *.dump
     echo [OK] Removed dump files
