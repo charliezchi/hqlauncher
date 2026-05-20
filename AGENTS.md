@@ -7,3 +7,7 @@
 ## Interaction Rules
 
 - **DO NOT guess user intent.** Ask clarifying questions before acting when instructions are ambiguous, underspecified, or could be interpreted in multiple ways.
+
+## Documentation
+
+- **Keep README.md up to date.** Whenever functionality, CLI interface, or behavior changes, update the corresponding sections in README.md promptly.
