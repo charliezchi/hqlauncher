@@ -5,18 +5,23 @@ set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 :: Route command
-if "%~1"=="" goto :ShowHelpAndPause
+if "%~1"=="" goto :DoDefault
 if /i "%~1"=="help" goto :ShowHelp
 if /i "%~1"=="/?" goto :ShowHelp
 if /i "%~1"=="-h" goto :ShowHelp
 if /i "%~1"=="--help" goto :ShowHelp
 if /i "%~1"=="build" goto :DoBuild
 if /i "%~1"=="clean" goto :DoClean
-if /i "%~1"=="register" goto :DoRegister
+
 
 echo Unknown command: %~1
 echo Run 'make help' for usage.
 exit /b 1
+
+:DoDefault
+call :DoClean
+call :DoBuild
+exit /b 0
 
 :ShowHelpAndPause
 call :ShowHelp
@@ -28,7 +33,7 @@ echo.
 echo Commands:
 echo   build      Build hqlauncher.exe using PyInstaller
 echo   clean      Remove build artifacts (exe, logs, temp files)
-echo   register   Add current directory to user PATH
+
 echo   help       Show this help message
 exit /b 0
 
@@ -105,6 +110,9 @@ echo.
 echo ========================================
 echo   Build Complete
 echo ========================================
+echo.
+
+call :DoRegister
 exit /b 0
 
 :DoClean
@@ -171,21 +179,22 @@ set "PROJECT_DIR=%PROJECT_DIR:~0,-1%"
 set "PROXY_DIR=%APPDATA%\hqlauncher"
 if not exist "%PROXY_DIR%" mkdir "%PROXY_DIR%"
 
-:: Create proxy hqlauncher.bat
-:: Priority: hqlauncher.exe (exe) > hqlauncher.bat (python dev)
-(
-    echo @echo off
-    echo if exist "%PROJECT_DIR%\hqlauncher.exe" ^(
-    echo     "%PROJECT_DIR%\hqlauncher.exe" %%*
-    echo ^) else if exist "%PROJECT_DIR%\hqlauncher.bat" ^(
-    echo     call "%PROJECT_DIR%\hqlauncher.bat" %%*
-    echo ^) else ^(
-    echo     echo [Error] hqlauncher not found in %PROJECT_DIR%
-    echo     exit /b 1
-    echo ^)
-) > "%PROXY_DIR%\hqlauncher.bat"
+:: Check if hqlauncher.exe exists in project dir
+if not exist "%PROJECT_DIR%\hqlauncher.exe" (
+    echo [FAIL] hqlauncher.exe not found in project directory.
+    echo        Please run 'make build' first.
+    exit /b 1
+)
 
-echo [OK] Created proxy: %PROXY_DIR%\hqlauncher.bat
+:: Remove old proxy bat from previous versions
+if exist "%PROXY_DIR%\hqlauncher.bat" del /f "%PROXY_DIR%\hqlauncher.bat" 2>nul
+
+copy /y "%PROJECT_DIR%\hqlauncher.exe" "%PROXY_DIR%\hqlauncher.exe" >nul
+if errorlevel 1 (
+    echo [FAIL] Failed to copy hqlauncher.exe to proxy directory.
+    exit /b 1
+)
+echo [OK] Copied hqlauncher.exe to proxy directory.
 
 :: Read current user PATH
 set "USER_PATH="
