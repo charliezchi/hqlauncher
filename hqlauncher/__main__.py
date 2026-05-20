@@ -109,6 +109,16 @@ def _resolve_version(versions, build):
     return versions[0]
 
 
+def _build_supports_project_open(build: str) -> bool:
+    """Check if build >= FT051426 (2026-05-14)."""
+    if not (build.startswith('FT') and len(build) == 8):
+        return False
+    mm = build[2:4]
+    dd = build[4:6]
+    yy = build[6:8]
+    return int(f"20{yy}{mm}{dd}") >= 20260514
+
+
 def main():
     args = sys.argv[1:]
 
@@ -150,17 +160,7 @@ def main():
 
     remaining = args[i:]
 
-    # Determine tool mode
-    if remaining and remaining[0] == '-cmd':
-        tool = 'hqfpga'
-        extra_args = remaining  # Pass -cmd and everything after to hqfpga
-    else:
-        tool = 'hqui'
-        extra_args = remaining
-        if remaining:
-            print(f"Warning: Ignoring unknown arguments: {remaining}")
-
-    # Resolve version
+    # Resolve version early (needed for feature check)
     versions = scanner.scan_all(config.load_config())
     if not versions:
         print("No HqFpga versions found.")
@@ -171,6 +171,21 @@ def main():
     if not build:
         print(f"Auto-selected latest version: {matched['semver']} (build {matched['build']})",
               file=sys.stderr, flush=True)
+
+    # Determine tool mode
+    if remaining and remaining[0] == '-cmd':
+        tool = 'hqfpga'
+        extra_args = remaining  # Pass -cmd and everything after to hqfpga
+    else:
+        tool = 'hqui'
+        if remaining:
+            if not any(a.startswith('-') for a in remaining) and _build_supports_project_open(matched['build']):
+                extra_args = remaining
+            else:
+                print(f"Warning: Ignoring unknown arguments: {remaining}")
+                extra_args = []
+        else:
+            extra_args = []
 
     launcher.launch_tool(matched, tool, extra_args)
 
