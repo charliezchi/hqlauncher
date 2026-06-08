@@ -9,7 +9,7 @@ from typing import Dict
 def launch_tool(version: Dict, tool: str, extra_args: list) -> None:
     """
     Launch hqfpga or hqui for a given version.
-    
+
     Args:
         version: Version dict from scanner.
         tool: 'hqfpga' or 'hqui'.
@@ -57,3 +57,20 @@ def launch_tool(version: Dict, tool: str, extra_args: list) -> None:
     except Exception as e:
         print(f"Error launching {tool}: {e}")
         sys.exit(1)
+
+
+def open_path(path: str) -> None:
+    """Open a file or directory with the default application."""
+    if not os.path.exists(path):
+        print(f"Error: Path not found: {path}")
+        sys.exit(1)
+    try:
+        os.startfile(path)
+    except Exception as e:
+        print(f"Error opening path: {e}")
+        sys.exit(1)
+
+
+def print_env(version: Dict) -> None:
+    """Print environment variables for a version."""
+    print(f"HQFPGA_PATH={version['path']}")

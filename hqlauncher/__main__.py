@@ -18,12 +18,18 @@ Options:
   -cfg [action]   Manage configuration (default: show)
   -b <build>      Specify build ID (e.g., FT041226)
   -cmd <file>     Launch hqfpga with cmd file
+  -doc            Open user manual
+  -cd             Open installation directory in file explorer
+  -env            Print installation directory path
 
 Examples:
   hqlauncher                  Launch latest hqui (GUI)
   hqlauncher -b FT041226      Launch hqui with specific build
   hqlauncher -cmd xx.tcl      Launch hqfpga with cmd file
   hqlauncher -b FT041226 -cmd xx.tcl
+  hqlauncher -doc             Open user manual
+  hqlauncher -cd              Open installation directory
+  hqlauncher -env             Print installation directory path
 """)
 
 
@@ -171,6 +177,25 @@ def main():
     if not build:
         print(f"Auto-selected latest version: {matched['semver']} (build {matched['build']})",
               file=sys.stderr, flush=True)
+
+    # Handle utility commands
+    if remaining and remaining[0] == '-doc':
+        doc_path = matched['doc_chs_path']
+        if not matched['has_doc_chs']:
+            print(f"Error: User manual not found for build {matched['build']}")
+            sys.exit(1)
+        launcher.open_path(doc_path)
+        print(f"Opened user manual for v{matched['semver']} (build {matched['build']})")
+        return
+
+    if remaining and remaining[0] == '-cd':
+        launcher.open_path(matched['path'])
+        print(f"Opened directory for v{matched['semver']} (build {matched['build']})")
+        return
+
+    if remaining and remaining[0] == '-env':
+        print(matched['path'])
+        return
 
     # Determine tool mode
     if remaining and remaining[0] == '-cmd':

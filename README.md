@@ -62,6 +62,9 @@ hqlauncher -cfg show    # 同上
 hqlauncher -cfg set-root "C:\hq"     # 添加扫描根目录
 hqlauncher -cfg remove-root "C:\hq"  # 移除扫描根目录
 hqlauncher -cfg init    # 恢复默认配置
+hqlauncher -doc         # 打开用户手册
+hqlauncher -cd          # 在资源管理器中打开安装目录
+hqlauncher -env         # 输出版本安装目录路径
 ```
 
 ## 参数速查
@@ -74,6 +77,9 @@ hqlauncher -cfg init    # 恢复默认配置
 | `-cfg [action]` | 配置管理（默认 show） |
 | `-b <build>` | 指定 build 号（如 `FT041226`） |
 | `-cmd <file>` | 启动 `hqfpga` 并执行 cmd 文件 |
+| `-doc` | 打开用户手册 |
+| `-cd` | 在资源管理器中打开安装目录 |
+| `-env` | 输出版本安装目录路径 |
 
 ## 判断逻辑
 
@@ -81,8 +87,11 @@ hqlauncher -cfg init    # 恢复默认配置
 2. `-v` → 版本
 3. `-ls` → 列出版本
 4. `-cfg` → 配置管理
-5. `-cmd` → 启动 `hqfpga`，`-cmd` 及后续参数全部透传
-6. 其他 → 启动 `hqui`：
+5. `-doc` → 打开用户手册
+6. `-cd` → 在资源管理器中打开安装目录
+7. `-env` → 输出版本安装目录路径
+8. `-cmd` → 启动 `hqfpga`，`-cmd` 及后续参数全部透传
+9. 其他 → 启动 `hqui`：
    - 如果参数是文件路径（不以 `-` 开头）且版本 build ≥ `FT051426` → 将路径传给 `hqui` 打开工程
    - 否则 → 忽略未知参数并发出警告
 

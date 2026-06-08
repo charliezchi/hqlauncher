@@ -35,6 +35,10 @@ def find_versions_in_root(root_dir: str) -> List[Dict]:
         hqfpga_path = os.path.join(dir_path, 'build', 'win_x64', 'bin', 'hqfpga.exe')
         hqui_path = os.path.join(dir_path, 'build', 'win_x64', 'hqui', 'hqui.exe')
 
+        doc_dir = os.path.join(dir_path, 'doc')
+        doc_chs = os.path.join(doc_dir, 'hqfpga_um_chs.pdf')
+        doc_eng = os.path.join(doc_dir, 'hqfpga_um_eng.pdf')
+
         versions.append({
             'name': dir_name,
             'path': dir_path,
@@ -45,6 +49,12 @@ def find_versions_in_root(root_dir: str) -> List[Dict]:
             'has_hqui': os.path.exists(hqui_path),
             'hqfpga_path': hqfpga_path,
             'hqui_path': hqui_path,
+            'doc_dir': doc_dir,
+            'has_doc_chs': os.path.exists(doc_chs),
+            'has_doc_eng': os.path.exists(doc_eng),
+            'doc_chs_path': doc_chs,
+            'doc_eng_path': doc_eng,
+            'samples_dir': os.path.join(dir_path, 'samples'),
         })
 
     # Sort descending (newest first)
