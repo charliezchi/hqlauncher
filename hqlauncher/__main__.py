@@ -18,6 +18,7 @@ Options:
   -cfg [action]   Manage configuration (default: show)
   -b <build>      Specify build ID (e.g., FT041226)
   -cmd <file>     Launch hqfpga with cmd file
+  -dl             Launch hqdnload (downloader)
   -doc            Open user manual
   -cd             Open installation directory in file explorer
   -env            Print installation directory path
@@ -27,6 +28,7 @@ Examples:
   hqlauncher -b FT041226      Launch hqui with specific build
   hqlauncher -cmd xx.tcl      Launch hqfpga with cmd file
   hqlauncher -b FT041226 -cmd xx.tcl
+  hqlauncher -dl              Launch hqdnload (downloader)
   hqlauncher -doc             Open user manual
   hqlauncher -cd              Open installation directory
   hqlauncher -env             Print installation directory path
@@ -201,6 +203,9 @@ def main():
     if remaining and remaining[0] == '-cmd':
         tool = 'hqfpga'
         extra_args = remaining  # Pass -cmd and everything after to hqfpga
+    elif remaining and remaining[0] == '-dl':
+        tool = 'hqdnload'
+        extra_args = []
     else:
         tool = 'hqui'
         if remaining:

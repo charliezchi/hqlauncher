@@ -8,11 +8,11 @@ from typing import Dict
 
 def launch_tool(version: Dict, tool: str, extra_args: list) -> None:
     """
-    Launch hqfpga or hqui for a given version.
+    Launch hqfpga, hqui, or hqdnload for a given version.
 
     Args:
         version: Version dict from scanner.
-        tool: 'hqfpga' or 'hqui'.
+        tool: 'hqfpga', 'hqui', or 'hqdnload'.
         extra_args: Additional command-line arguments to pass to the tool.
     """
     if tool == 'hqfpga':
@@ -25,6 +25,11 @@ def launch_tool(version: Dict, tool: str, extra_args: list) -> None:
         if not version['has_hqui']:
             print(f"Error: hqui.exe not found in {version['path']}")
             sys.exit(1)
+    elif tool == 'hqdnload':
+        exe_path = version['hqdnload_path']
+        if not version['has_hqdnload']:
+            print(f"Error: hqdnload.exe not found in {version['path']}")
+            sys.exit(1)
     else:
         print(f"Error: Unknown tool '{tool}'")
         sys.exit(1)
@@ -36,8 +41,8 @@ def launch_tool(version: Dict, tool: str, extra_args: list) -> None:
     cmd = [exe_path] + extra_args
 
     try:
-        if tool == 'hqui':
-            # GUI tool: detach so we don't block the terminal
+        if tool in ('hqui', 'hqdnload'):
+            # GUI tools: detach so we don't block the terminal
             creationflags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
             subprocess.Popen(cmd, creationflags=creationflags, close_fds=True)
             print(f"Launched {tool} v{version['semver']} (build {version['build']})")
