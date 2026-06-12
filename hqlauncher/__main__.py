@@ -19,6 +19,7 @@ Options:
   -b <build>      Specify build ID (e.g., FT041226)
   -cmd <file>     Launch hqfpga with cmd file
   -dl             Launch hqdnload (downloader)
+  -cable [args]   Launch cable.exe with optional subcommands (uses latest version)
   -doc            Open user manual
   -cd             Open installation directory in file explorer
   -env            Print installation directory path
@@ -29,6 +30,8 @@ Examples:
   hqlauncher -cmd xx.tcl      Launch hqfpga with cmd file
   hqlauncher -b FT041226 -cmd xx.tcl
   hqlauncher -dl              Launch hqdnload (downloader)
+  hqlauncher -cable -h        Show cable.exe help
+  hqlauncher -cable info      Run cable.exe info
   hqlauncher -doc             Open user manual
   hqlauncher -cd              Open installation directory
   hqlauncher -env             Print installation directory path
@@ -129,6 +132,21 @@ def _build_supports_project_open(build: str) -> bool:
 
 def main():
     args = sys.argv[1:]
+
+    # Cable: always uses latest version, pass through all subcommands
+    if '-cable' in args:
+        idx = args.index('-cable')
+        cable_args = args[idx + 1:]
+        versions = scanner.scan_all(config.load_config())
+        if not versions:
+            print("No HqFpga versions found.")
+            print("Tip: Check your scan_roots configuration with 'hqlauncher -cfg'")
+            sys.exit(1)
+        matched = versions[0]
+        print(f"Auto-selected latest version: {matched['semver']} (build {matched['build']})",
+              file=sys.stderr, flush=True)
+        launcher.launch_tool(matched, 'cable', cable_args)
+        return
 
     # Help
     if '-h' in args:

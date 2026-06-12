@@ -30,6 +30,11 @@ def launch_tool(version: Dict, tool: str, extra_args: list) -> None:
         if not version['has_hqdnload']:
             print(f"Error: hqdnload.exe not found in {version['path']}")
             sys.exit(1)
+    elif tool == 'cable':
+        exe_path = version['cable_path']
+        if not version['has_cable']:
+            print(f"Error: cable.exe not found in {version['path']}")
+            sys.exit(1)
     else:
         print(f"Error: Unknown tool '{tool}'")
         sys.exit(1)

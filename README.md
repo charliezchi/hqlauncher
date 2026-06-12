@@ -63,6 +63,8 @@ hqlauncher -cfg set-root "C:\hq"     # 添加扫描根目录
 hqlauncher -cfg remove-root "C:\hq"  # 移除扫描根目录
 hqlauncher -cfg init    # 恢复默认配置
 hqlauncher -dl          # 启动下载器 hqdnload
+hqlauncher -cable -h    # 启动 cable.exe 并透传 -h（查看 cable 帮助）
+hqlauncher -cable info  # 启动 cable.exe 并透传 info 子命令
 hqlauncher -doc         # 打开用户手册
 hqlauncher -cd          # 在资源管理器中打开安装目录
 hqlauncher -env         # 输出版本安装目录路径
@@ -79,6 +81,7 @@ hqlauncher -env         # 输出版本安装目录路径
 | `-b <build>` | 指定 build 号（如 `FT041226`） |
 | `-cmd <file>` | 启动 `hqfpga` 并执行 cmd 文件 |
 | `-dl` | 启动下载器 `hqdnload` |
+| `-cable [args]` | 启动 `cable.exe`，透传所有子命令（只用最新版本） |
 | `-doc` | 打开用户手册 |
 | `-cd` | 在资源管理器中打开安装目录 |
 | `-env` | 输出版本安装目录路径 |
@@ -89,12 +92,13 @@ hqlauncher -env         # 输出版本安装目录路径
 2. `-v` → 版本
 3. `-ls` → 列出版本
 4. `-cfg` → 配置管理
-5. `-doc` → 打开用户手册
-6. `-cd` → 在资源管理器中打开安装目录
-7. `-env` → 输出版本安装目录路径
-8. `-cmd` → 启动 `hqfpga`，`-cmd` 及后续参数全部透传
-9. `-dl` → 启动下载器 `hqdnload`
-10. 其他 → 启动 `hqui`：
+5. `-cable` → 启动 `cable.exe`，后续参数全部透传（只用最新版本）
+6. `-doc` → 打开用户手册
+7. `-cd` → 在资源管理器中打开安装目录
+8. `-env` → 输出版本安装目录路径
+9. `-cmd` → 启动 `hqfpga`，`-cmd` 及后续参数全部透传
+10. `-dl` → 启动下载器 `hqdnload`
+11. 其他 → 启动 `hqui`：
    - 如果参数是文件路径（不以 `-` 开头）且版本 build ≥ `FT051426` → 将路径传给 `hqui` 打开工程
    - 否则 → 忽略未知参数并发出警告
 
