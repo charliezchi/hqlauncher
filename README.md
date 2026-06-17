@@ -57,6 +57,11 @@ hqlauncher -b FT041226 -cmd xx.tcl       # 启动指定 build 的 hqfpga
 hqlauncher -h           # 显示帮助
 hqlauncher -v           # 显示版本
 hqlauncher -ls          # 列出所有发现的版本
+hqlauncher -ls -device  # 列出 dv_list.xml 中所有器件（默认 -all）
+hqlauncher -ls -device -seal   # 列出 SEAL 系列器件
+hqlauncher -ls -device -shark  # 列出 SHARK 系列器件
+hqlauncher -ls -device -sealion # 列出 SEALION 系列器件
+hqlauncher -ls -device -seal -startwith SA5Z-30  # 前缀过滤
 hqlauncher -cfg         # 显示当前配置
 hqlauncher -cfg show    # 同上
 hqlauncher -cfg set-root "C:\hq"     # 添加扫描根目录
@@ -77,6 +82,7 @@ hqlauncher -env         # 输出版本安装目录路径
 | `-h` | 显示帮助 |
 | `-v` | 显示版本 |
 | `-ls` | 列出版本 |
+| `-ls -device [-all\|-shark\|-seal\|-sealion] [-startwith <prefix>]` | 列出支持的器件（默认 `-all`） |
 | `-cfg [action]` | 配置管理（默认 show） |
 | `-b <build>` | 指定 build 号（如 `FT041226`） |
 | `-cmd <file>` | 启动 `hqfpga` 并执行 cmd 文件 |
@@ -90,7 +96,7 @@ hqlauncher -env         # 输出版本安装目录路径
 
 1. `-h` → 帮助
 2. `-v` → 版本
-3. `-ls` → 列出版本
+3. `-ls` → 列出版本；`-ls -device` → 列出器件
 4. `-cfg` → 配置管理
 5. `-cable` → 启动 `cable.exe`，后续参数全部透传（只用最新版本）
 6. `-doc` → 打开用户手册

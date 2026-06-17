@@ -15,6 +15,7 @@ Options:
   -h              Show this help message
   -v              Show version
   -ls             List all discovered versions
+  -ls -device    List all supported devices from dv_list.xml
   -cfg [action]   Manage configuration (default: show)
   -b <build>      Specify build ID (e.g., FT041226)
   -cmd <file>     Launch hqfpga with cmd file
@@ -29,6 +30,9 @@ Examples:
   hqlauncher -b FT041226      Launch hqui with specific build
   hqlauncher -cmd xx.tcl      Launch hqfpga with cmd file
   hqlauncher -b FT041226 -cmd xx.tcl
+  hqlauncher -ls -device      List all supported devices
+  hqlauncher -ls -device -seal   List SEAL family devices
+  hqlauncher -ls -device -seal -startwith SA5Z-30   Filter by prefix
   hqlauncher -dl              Launch hqdnload (downloader)
   hqlauncher -cable -h        Show cable.exe help
   hqlauncher -cable info      Run cable.exe info
@@ -43,8 +47,13 @@ def show_version():
     print(__version__)
 
 
-def cmd_list():
-    """List all discovered versions."""
+def cmd_list(raw_args=None):
+    """List all discovered versions or supported devices."""
+    raw_args = raw_args or []
+    if raw_args and raw_args[0] == '-device':
+        cmd_list_devices(raw_args[1:])
+        return
+
     versions = scanner.scan_all(config.load_config())
     if not versions:
         print("No HqFpga versions found.")
@@ -56,6 +65,82 @@ def cmd_list():
     for i, v in enumerate(versions, 1):
         marker = "  <-- latest" if i == 1 else ""
         print(f"{i:<4} {v['semver']:<10} {v['build']:<12} {v['name']:<40}{marker}")
+
+
+def cmd_list_devices(raw_args=None):
+    """List supported devices from dv_list.xml of the latest version."""
+    raw_args = raw_args or []
+
+    # Parse family filter and -startwith prefix
+    filter_arg = 'all'
+    startswith_prefix = None
+
+    i = 0
+    while i < len(raw_args):
+        arg = raw_args[i]
+        if arg.lower() == '-startwith':
+            if i + 1 < len(raw_args):
+                startswith_prefix = raw_args[i + 1]
+                i += 2
+            else:
+                print("Error: -startwith requires a prefix")
+                sys.exit(1)
+        elif arg.startswith('-'):
+            filter_arg = arg.lower().lstrip('-')
+            i += 1
+        else:
+            i += 1
+
+    versions = scanner.scan_all(config.load_config())
+    if not versions:
+        print("No HqFpga versions found.")
+        print("Tip: Check your scan_roots configuration with 'hqlauncher -cfg'")
+        return
+
+    version = versions[0]
+    dv_list_path = os.path.join(version['path'], 'build', 'common', 'device', 'dv_list.xml')
+    if not os.path.exists(dv_list_path):
+        print(f"Error: Device list not found: {dv_list_path}")
+        sys.exit(1)
+
+    try:
+        import xml.etree.ElementTree as ET
+        tree = ET.parse(dv_list_path)
+        root = tree.getroot()
+    except Exception as e:
+        print(f"Error parsing device list: {e}")
+        sys.exit(1)
+
+    all_parts = []
+    for family in root.findall('.//family'):
+        family_name = family.get('name', '').upper()
+        alias = family.get('alias', '').upper()
+        if filter_arg != 'all':
+            # Match against family name or alias words (e.g. "seal" matches "SEAL" or alias "SA SCM")
+            aliases = alias.split()
+            names_to_match = [family_name] + aliases
+            if filter_arg.upper() not in names_to_match:
+                continue
+
+        order_parts = family.find('order_parts')
+        if order_parts is None:
+            continue
+        for part in order_parts.findall('part'):
+            name = part.get('name')
+            if name:
+                if startswith_prefix is not None and not name.startswith(startswith_prefix):
+                    continue
+                all_parts.append(name)
+
+    if not all_parts:
+        filter_desc = filter_arg
+        if startswith_prefix:
+            filter_desc = f"{filter_arg}, starting with '{startswith_prefix}'"
+        print(f"No devices found for filter: {filter_desc}")
+        return
+
+    for part in all_parts:
+        print(part)
 
 
 def cmd_config(raw_args):
@@ -160,7 +245,9 @@ def main():
 
     # List
     if '-ls' in args:
-        cmd_list()
+        idx = args.index('-ls')
+        ls_args = args[idx + 1:]
+        cmd_list(ls_args)
         return
 
     # Config
