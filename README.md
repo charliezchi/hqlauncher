@@ -67,7 +67,8 @@ hqlauncher -cfg show    # 同上
 hqlauncher -cfg set-root "C:\hq"     # 添加扫描根目录
 hqlauncher -cfg remove-root "C:\hq"  # 移除扫描根目录
 hqlauncher -cfg init    # 恢复默认配置
-hqlauncher -dl          # 启动下载器 hqdnload
+hqlauncher -dl          # 启动下载器 hqdnload（自动选择 cwd 中最新的 .bin）
+hqlauncher -dl -f file.bin  # 启动下载器并指定 .bin 文件
 hqlauncher -cable -h    # 启动 cable.exe 并透传 -h（查看 cable 帮助）
 hqlauncher -cable info  # 启动 cable.exe 并透传 info 子命令
 hqlauncher -doc         # 打开用户手册
@@ -86,7 +87,7 @@ hqlauncher -env         # 输出版本安装目录路径
 | `-cfg [action]` | 配置管理（默认 show） |
 | `-b <build>` | 指定 build 号（如 `FT041226`） |
 | `-cmd <file>` | 启动 `hqfpga` 并执行 cmd 文件 |
-| `-dl` | 启动下载器 `hqdnload` |
+| `-dl [-f <file>]` | 启动下载器 `hqdnload`（自动选择 cwd 最新 `.bin`，或 `-f` 指定） |
 | `-cable [args]` | 启动 `cable.exe`，透传所有子命令（只用最新版本） |
 | `-doc` | 打开用户手册 |
 | `-cd` | 在资源管理器中打开安装目录 |

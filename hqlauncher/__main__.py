@@ -19,7 +19,7 @@ Options:
   -cfg [action]   Manage configuration (default: show)
   -b <build>      Specify build ID (e.g., FT041226)
   -cmd <file>     Launch hqfpga with cmd file
-  -dl             Launch hqdnload (downloader)
+  -dl [-f file]   Launch hqdnload (downloader)
   -cable [args]   Launch cable.exe with optional subcommands (uses latest version)
   -doc            Open user manual
   -cd             Open installation directory in file explorer
@@ -33,7 +33,8 @@ Examples:
   hqlauncher -ls -device      List all supported devices
   hqlauncher -ls -device -seal   List SEAL family devices
   hqlauncher -ls -device -seal -startwith SA5Z-30   Filter by prefix
-  hqlauncher -dl              Launch hqdnload (downloader)
+  hqlauncher -dl              Launch hqdnload (auto-detect .bin in cwd)
+  hqlauncher -dl -f file.bin  Launch hqdnload with specified .bin file
   hqlauncher -cable -h        Show cable.exe help
   hqlauncher -cable info      Run cable.exe info
   hqlauncher -doc             Open user manual
@@ -215,6 +216,52 @@ def _build_supports_project_open(build: str) -> bool:
     return int(f"20{yy}{mm}{dd}") >= 20260514
 
 
+def _build_hqdnload_args(dl_args):
+    """Build extra arguments for hqdnload, with optional -f file auto-detection."""
+    # Filter out hqlauncher's own -b option and its value
+    filtered = []
+    i = 0
+    while i < len(dl_args):
+        if dl_args[i] == '-b' and i + 1 < len(dl_args):
+            i += 2
+        else:
+            filtered.append(dl_args[i])
+            i += 1
+
+    if '-f' in filtered:
+        idx = filtered.index('-f')
+        if idx + 1 >= len(filtered):
+            print("Error: -f requires a file path")
+            sys.exit(1)
+        return filtered
+
+    if filtered:
+        # Pass through any other hqdnload arguments as-is
+        return filtered
+
+    # Auto-detect the most recently modified .bin file in the current directory
+    bin_files = [f for f in os.listdir('.') if f.lower().endswith('.bin')]
+    if bin_files:
+        bin_files.sort(key=lambda f: os.path.getmtime(f), reverse=True)
+        latest_bin = bin_files[0]
+        print(f"Auto-selected download file: {latest_bin}")
+        return ['-f', latest_bin]
+    return []
+
+
+def _launch_latest_tool(tool: str, extra_args: list) -> None:
+    """Launch a tool using the latest discovered HqFpga version."""
+    versions = scanner.scan_all(config.load_config())
+    if not versions:
+        print("No HqFpga versions found.")
+        print("Tip: Check your scan_roots configuration with 'hqlauncher -cfg'")
+        sys.exit(1)
+    matched = versions[0]
+    print(f"Auto-selected latest version: {matched['semver']} (build {matched['build']})",
+          file=sys.stderr, flush=True)
+    launcher.launch_tool(matched, tool, extra_args)
+
+
 def main():
     args = sys.argv[1:]
 
@@ -222,15 +269,15 @@ def main():
     if '-cable' in args:
         idx = args.index('-cable')
         cable_args = args[idx + 1:]
-        versions = scanner.scan_all(config.load_config())
-        if not versions:
-            print("No HqFpga versions found.")
-            print("Tip: Check your scan_roots configuration with 'hqlauncher -cfg'")
-            sys.exit(1)
-        matched = versions[0]
-        print(f"Auto-selected latest version: {matched['semver']} (build {matched['build']})",
-              file=sys.stderr, flush=True)
-        launcher.launch_tool(matched, 'cable', cable_args)
+        _launch_latest_tool('cable', cable_args)
+        return
+
+    # Downloader: always uses latest version, supports -f file or auto-detect
+    if '-dl' in args:
+        idx = args.index('-dl')
+        dl_args = args[idx + 1:]
+        extra_args = _build_hqdnload_args(dl_args)
+        _launch_latest_tool('hqdnload', extra_args)
         return
 
     # Help
@@ -308,9 +355,6 @@ def main():
     if remaining and remaining[0] == '-cmd':
         tool = 'hqfpga'
         extra_args = remaining  # Pass -cmd and everything after to hqfpga
-    elif remaining and remaining[0] == '-dl':
-        tool = 'hqdnload'
-        extra_args = []
     else:
         tool = 'hqui'
         if remaining:
